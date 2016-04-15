@@ -1,0 +1,69 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id "com.github.johnrengelman.shadow" version "1.2.3"
+    id 'maven-publish'
+}
+
+
+description = """ Testing the foo """
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+// We only publish the fat jar as a stand alone artifact.
+shadowJar {
+        baseName = 'foo-all'
+        classifier = ''
+}
+// This is to publish the shadow as a maven artifact,
+// Use publishShadowPublicationToMavenLocal for local development
+// Use publishShadowPublicationToMavenRepository for publications to maven repo
+publishing {
+  publications {
+    shadow(MavenPublication) {
+      from components.shadow
+      artifactId = 'foo-all'
+    }
+  }
+}
+
+repositories {
+     /**
+     * There was an issue in Jenkins where for some reason Zookeeper classes did not 
+     * get packaged into the jar and class not found errors ensued in beta. The cause
+     * of this error was not clear. 
+     * It seemed to be related to using the mavenLocal repo. See this for detail but
+     * suffice it to say that we still need this to work for developers installing things
+     * into cache locally and using it. Since we never execute the streams project locally
+     * much(?) we may never run into this issue. Until then this hack is necessary to make
+     * sure gradle does not get confused with local cache repos when building artifacts. 
+     */
+     if (!project.hasProperty("dontUseMavenLocal")) {
+        println "**Using maven local cache as repo**"
+        mavenLocal()
+     }
+     mavenCentral()
+     maven { url "https://repository.cloudera.com/cloudera/cloudera-repos" }
+}
+dependencies {
+    compile(group: 'org.apache.hbase', name: 'hbase-client', version:'0.98.6-cdh5.3.3') {
+		exclude(module: 'jaxb-impl')
+    }
+    compile group: 'org.apache.hadoop', name: 'hadoop-core', version:'2.5.0-mr1-cdh5.3.3'
+    compile group: 'org.apache.hadoop', name: 'hadoop-common', version:'2.5.0-cdh5.3.3'
+}
+
+jar {
+    def manifestClasspath = configurations.runtime.collect { it.getName() }.join(' ')
+    
+    manifest {
+        attributes  'Implementation-Title': 'Building the foos',
+                    'Implementation-Version': '1.0.0',
+                    'Built-By': System.getProperty('user.name'),
+                    'Built-Date': new Date(),
+                    'Built-JDK': System.getProperty('java.version'),
+                    'Built-Gradle': gradle.gradleVersion,
+                    'Class-Path': manifestClasspath
+    }
+}
