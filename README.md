@@ -2,8 +2,10 @@
 ## Issue
 Certain classes are not included in the shadow jar if mavenLocal is missing jar files but has pom files. No warning is emmitted and gradle
 continues on building the shadowjar.
-My understanding is that if gradle cannot find the artifact in a repo it should try finding it in other repos. In the project where I 
-factored this repos code out of, there were class not found exceptions that took some time to debug. 
+My understanding is that if gradle cannot find the artifact in a repo it should try finding it in other repos, or perhaps give up when it finds partial artifacts(?). Past tickets seem to suggest the latter(except for maven local m2). 
+
+In the project where I 
+factored this repos code out of, there were class not found exceptions that took some time to debug. Hopefully you can reproduce it.
 
 I have read material around a ticket that talks about a similar issue:
 https://issues.gradle.org/browse/GRADLE-2709
