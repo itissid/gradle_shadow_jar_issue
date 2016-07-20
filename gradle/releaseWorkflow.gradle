@@ -1,0 +1,36 @@
+
+apply plugin: 'org.ajoberstar.release-opinion'
+import org.ajoberstar.grgit.Grgit
+import org.ajoberstar.gradle.git.release.opinion.Strategies
+import org.ajoberstar.gradle.git.release.opinion.Strategies.Normal
+import org.ajoberstar.gradle.git.release.semver.RebuildVersionStrategy
+import static org.ajoberstar.gradle.git.release.semver.StrategyUtil.*
+import org.ajoberstar.gradle.git.release.semver.ChangeScope
+import org.ajoberstar.gradle.git.release.semver.SemVerStrategy
+import groovy.swing.SwingBuilder
+
+ext{
+    grgit = Grgit.open(project.file('.'))
+    revision = grgit.head().abbreviatedId
+    currentBranch = grgit.branch.getCurrent().getName()
+}
+
+release {
+    System.setProperty("org.ajoberstar.grgit.auth.interactive.allow", "false")
+    grgit = Grgit.open(project.file('.'))
+    tasks.release.dependsOn 'build'
+    versionStrategy RebuildVersionStrategy.INSTANCE
+    versionStrategy Strategies.DEVELOPMENT
+    versionStrategy Strategies.SNAPSHOT
+    versionStrategy Strategies.PRE_RELEASE_ALPHA_BETA
+    def SemVerStrategy finalWithMinorScope = Strategies.FINAL.copyWith(
+        name: 'finalWithMinorScope',
+        stages: ['finalWithMinorScope'] as SortedSet,
+		normalStrategy: one(Normal.USE_SCOPE_PROP, Normal.USE_NEAREST_ANY, Normal.useScope(ChangeScope.MINOR)),
+    )
+    defaultVersionStrategy finalWithMinorScope
+    tagStrategy {
+        generateMessage = { version -> "Gradle release version: $version.version" }
+    }
+}
+

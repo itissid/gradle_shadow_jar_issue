@@ -5,6 +5,7 @@ plugins {
     id 'maven-publish'
 }
 
+apply from: 'gradle/releaseWorkflow.gradle'
 
 description = """ Testing the foo """
 
@@ -13,17 +14,26 @@ targetCompatibility = 1.7
 
 // We only publish the fat jar as a stand alone artifact.
 shadowJar {
-        baseName = 'foo-all'
-        classifier = ''
+        baseName = 'foo-bar'
+        classifier = null
 }
 // This is to publish the shadow as a maven artifact,
 // Use publishShadowPublicationToMavenLocal for local development
 // Use publishShadowPublicationToMavenRepository for publications to maven repo
 publishing {
+
+  repositories {
+    maven {
+            url "${artifactory_contextUrl}/${artifactory_root_dir}/${artifactory_team_dir}/releases/"
+            credentials {
+                username =  "${artifactory_user}"
+                password = "${artifactory_password}"
+            }
+    }
+  }
   publications {
     shadow(MavenPublication) {
-      from components.shadow
-      artifactId = 'foo-all'
+      artifact source: shadowJar, classifier: null, extension: 'jar'
     }
   }
 }

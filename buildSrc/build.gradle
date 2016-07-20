@@ -1,0 +1,15 @@
+apply plugin: 'groovy'
+
+repositories {
+    maven {
+        url 'http://bams-sami-api.int.thomsonreuters.com/artifactory/plugins-release'
+    }
+}
+dependencies {
+    compile localGroovy()
+    compile gradleApi()
+    compile 'org.ajoberstar:gradle-git:1.4.2'
+    compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7'
+    compile 'commons-io:commons-io:2.4'
+}
+
